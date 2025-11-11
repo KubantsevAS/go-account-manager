@@ -16,14 +16,16 @@ var vault = account.GetVault(file.NewJsonDb("vault.json"))
 
 func main() {
 	fmt.Println("***Account Manager***")
-	genericCallMenu(&[]string{
+	var menuItems = []string{
 		"1. 'create'",
 		"2. 'find'",
 		"3. 'delete'",
-		"4. 'exit'",
+		"4. 'menu'",
+		"5. 'exit'",
 		"Enter one of commands to start work with accounts",
-	})
-	callMenu()
+	}
+
+	printMultiLine(&menuItems)
 
 Menu:
 	for {
@@ -40,7 +42,7 @@ Menu:
 			"create": func() bool { createAccount(); return false },
 			"find":   func() bool { findAccount(); return false },
 			"delete": func() bool { deleteAccount(); return false },
-			"menu":   func() bool { callMenu(); return false },
+			"menu":   func() bool { printMultiLine(&menuItems); return false },
 			"exit":   func() bool { return true },
 		}
 
@@ -48,6 +50,7 @@ Menu:
 
 		if menuFunc == nil {
 			output.PrintError("Invalid input")
+			continue
 		}
 
 		if menuFunc() {
@@ -58,17 +61,20 @@ Menu:
 	fmt.Println("** EXIT Account Manager**")
 }
 
-func callMenu() {
-	fmt.Println(`Enter one of commands to start work with accounts:
-1. 'create'
-2. 'find'
-3. 'delete'
-4. 'exit'`)
-}
-
 func findAccount() {
-	requiredUrl := promptData("Enter url to find all accounts: ")
-	requiredAccounts := vault.FindAccount(requiredUrl, "Url", checkString)
+	var menuItems = []string{
+		"1. 'Login'",
+		"2. 'Url'",
+		"Choose witch property to use",
+	}
+	printMultiLine(&menuItems)
+
+	var property string
+	fmt.Scanln(&property)
+
+	requiredUrl := promptData("Enter property value to find all accounts: ")
+
+	requiredAccounts := vault.FindAccount(requiredUrl, property, checkString)
 
 	accountsCount := len(requiredAccounts)
 
@@ -79,7 +85,7 @@ func findAccount() {
 	fmt.Printf("Total found: %d\n", accountsCount)
 
 	for index, acc := range requiredAccounts {
-		fmt.Printf("Account %d:\n", index+1)
+		fmt.Printf("Account %d: \n", index+1)
 		acc.OutputData()
 	}
 }
@@ -111,12 +117,12 @@ func promptData(prompt string) string {
 	return res
 }
 
-func genericCallMenu[T any](prompt *[]T) {
+func printMultiLine[T any](prompt *[]T) {
 	arrayLength := len(*prompt)
 
 	for index, value := range *prompt {
 		if index+1 == arrayLength {
-			fmt.Printf("%v:", value)
+			fmt.Printf("%v: ", value)
 		} else {
 			fmt.Println(value)
 		}
@@ -124,7 +130,7 @@ func genericCallMenu[T any](prompt *[]T) {
 }
 
 func checkString(acc account.Account, property string, requiredValue string) bool {
-	// Use reflection to access struct field by name
+	// Reflection to access struct field by name
 	val := reflect.ValueOf(acc)
 	field := val.FieldByName(property)
 

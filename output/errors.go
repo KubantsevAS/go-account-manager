@@ -1,8 +1,6 @@
 package output
 
 import (
-	"fmt"
-
 	"github.com/fatih/color"
 )
 
@@ -17,6 +15,4 @@ func PrintError(value any) {
 	default:
 		color.Red("Unknown error type")
 	}
-
-	fmt.Println(value)
 }
