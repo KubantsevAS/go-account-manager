@@ -25,7 +25,7 @@ func main() {
 		"Enter one of commands to start work with accounts",
 	}
 
-	printMultiLine(&menuItems)
+	printMultiLine(menuItems...)
 
 Menu:
 	for {
@@ -42,7 +42,7 @@ Menu:
 			"create": func() bool { createAccount(); return false },
 			"find":   func() bool { findAccount(); return false },
 			"delete": func() bool { deleteAccount(); return false },
-			"menu":   func() bool { printMultiLine(&menuItems); return false },
+			"menu":   func() bool { printMultiLine(menuItems...); return false },
 			"exit":   func() bool { return true },
 		}
 
@@ -67,14 +67,19 @@ func findAccount() {
 		"2. 'Url'",
 		"Choose witch property to use",
 	}
-	printMultiLine(&menuItems)
+	printMultiLine(menuItems...)
 
 	var property string
 	fmt.Scanln(&property)
 
+	if property != "Login" && property != "Url" {
+		output.PrintError("Invalid property")
+		return
+	}
+
 	requiredUrl := promptData("Enter property value to find all accounts: ")
 
-	requiredAccounts := vault.FindAccount(requiredUrl, property, checkString)
+	requiredAccounts := vault.FindAccount(requiredUrl, property, checkPropertyString)
 
 	accountsCount := len(requiredAccounts)
 
@@ -117,10 +122,10 @@ func promptData(prompt string) string {
 	return res
 }
 
-func printMultiLine[T any](prompt *[]T) {
-	arrayLength := len(*prompt)
+func printMultiLine(prompt ...string) {
+	arrayLength := len(prompt)
 
-	for index, value := range *prompt {
+	for index, value := range prompt {
 		if index+1 == arrayLength {
 			fmt.Printf("%v: ", value)
 		} else {
@@ -129,7 +134,7 @@ func printMultiLine[T any](prompt *[]T) {
 	}
 }
 
-func checkString(acc account.Account, property string, requiredValue string) bool {
+func checkPropertyString(acc account.Account, property string, requiredValue string) bool {
 	// Reflection to access struct field by name
 	val := reflect.ValueOf(acc)
 	field := val.FieldByName(property)
