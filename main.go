@@ -2,20 +2,31 @@ package main
 
 import (
 	"demo/account-manager/account"
+	"demo/account-manager/encrypter"
+
 	// "demo/account-manager/cloud"
+	"demo/account-manager/file"
 	"demo/account-manager/output"
 
-	"demo/account-manager/file"
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 // var vault = account.GetVault(cloud.NewCloudDb("https://github.com"))
-var vault = account.GetVault(file.NewJsonDb("vault.json"))
+var vault = account.GetVault(file.NewJsonDb("vault.json"), *encrypter.NewEncrypter())
 
 func main() {
 	fmt.Println("***Account Manager***")
+
+	envErr := godotenv.Load()
+
+	if envErr != nil {
+		output.PrintError(envErr)
+	}
+
 	var menuItems = []string{
 		"1. 'create'",
 		"2. 'find'",
