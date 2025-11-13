@@ -2,7 +2,7 @@ package main
 
 import (
 	"demo/account-manager/account"
-	"demo/account-manager/encrypter"
+	"demo/account-manager/encryptor"
 
 	// "demo/account-manager/cloud"
 	"demo/account-manager/file"
@@ -15,17 +15,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// var vault = account.GetVault(cloud.NewCloudDb("https://github.com"))
-var vault = account.GetVault(file.NewJsonDb("vault.json"), *encrypter.NewEncrypter())
-
 func main() {
 	fmt.Println("***Account Manager***")
-
 	envErr := godotenv.Load()
 
 	if envErr != nil {
 		output.PrintError(envErr)
 	}
+
+	var vault = account.InitVault(file.NewJsonDb("vault.vault"), *encryptor.NewEncryptor())
+	// var vault = account.GetVault(cloud.NewCloudDb("https://github.com"))
 
 	var menuItems = []string{
 		"1. 'create'",
@@ -50,9 +49,9 @@ Menu:
 		}
 
 		var optionsMap = map[string]func() bool{
-			"create": func() bool { createAccount(); return false },
-			"find":   func() bool { findAccount(); return false },
-			"delete": func() bool { deleteAccount(); return false },
+			"create": func() bool { createAccount(vault); return false },
+			"find":   func() bool { findAccount(vault); return false },
+			"delete": func() bool { deleteAccount(vault); return false },
 			"menu":   func() bool { printMultiLine(menuItems...); return false },
 			"exit":   func() bool { return true },
 		}
@@ -72,7 +71,7 @@ Menu:
 	fmt.Println("** EXIT Account Manager**")
 }
 
-func findAccount() {
+func findAccount(vault *account.VaultWithDb) {
 	var menuItems = []string{
 		"1. 'Login'",
 		"2. 'Url'",
@@ -106,12 +105,12 @@ func findAccount() {
 	}
 }
 
-func deleteAccount() {
+func deleteAccount(vault *account.VaultWithDb) {
 	requiredUrl := promptData("Enter url to delete those accounts: ")
 	vault.DeleteAccounts(requiredUrl)
 }
 
-func createAccount() {
+func createAccount(vault *account.VaultWithDb) {
 	login := promptData("Enter login: ")
 	password := promptData("Enter password: ")
 	url := promptData("Enter url: ")

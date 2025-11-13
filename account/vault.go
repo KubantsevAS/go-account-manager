@@ -1,12 +1,14 @@
 package account
 
 import (
-	"demo/account-manager/encrypter"
+	"demo/account-manager/encryptor"
 	"demo/account-manager/output"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 // Embedded interface
@@ -31,10 +33,10 @@ type Vault struct {
 type VaultWithDb struct {
 	Vault
 	db  Database
-	enc encrypter.Encrypter
+	enc encryptor.Encryptor
 }
 
-func GetVault(db Database, enc encrypter.Encrypter) *VaultWithDb {
+func InitVault(db Database, enc encryptor.Encryptor) *VaultWithDb {
 	file, err := db.Read()
 
 	if err != nil {
@@ -49,8 +51,10 @@ func GetVault(db Database, enc encrypter.Encrypter) *VaultWithDb {
 	}
 
 	var vault Vault
+	data := enc.Decrypt(file)
+	parseErr := json.Unmarshal(data, &vault)
 
-	parseErr := json.Unmarshal(file, &vault)
+	color.Cyan("Total accounts found: %d", len(vault.Accounts))
 
 	if parseErr != nil {
 		output.PrintError(parseErr)
@@ -124,5 +128,7 @@ func (vault *VaultWithDb) save() {
 		return
 	}
 
-	vault.db.Write(data)
+	encryptedData := vault.enc.Encrypt(data)
+
+	vault.db.Write(encryptedData)
 }
